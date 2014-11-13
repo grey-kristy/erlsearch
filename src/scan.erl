@@ -1,21 +1,43 @@
 -module(scan).
 
--export([get_erl/0]).
+-export([load/0, get_docs/0, make_index/1]).
+
+-define(DOC_TABLE, doc_table).
+-define(DOC_FILE, "priv/doc_table.ets").
 
 
-get_erl() ->
+load() ->
+    ets:file2tab(?DOC_FILE).
+
+get_docs() ->
+    case ets:info(?DOC_TABLE, size) of
+        undefined -> ets:new(?DOC_TABLE, [set, named_table]);
+        _         -> ets:delete_all_objects(?DOC_TABLE)
+    end,
+    scan_docs(?DOC_TABLE),
+    ets:tab2file(?DOC_TABLE, ?DOC_FILE).
+
+make_index(Table) ->
+    make_index(Table, ets:first(Table)).
+
+make_index(Table, '$end_of_table') ->    
+    ok;
+
+make_index(Table, Key) ->
+    io:format("~p = ~p~n", [binary:part(Key, {0, 3}), Key]),
+    make_index(Table, ets:next(Table, Key)).
+
+scan_docs(Table) ->
     lager:info("start get"),
     inets:start(),
-    ets:new(e1, [set, named_table]),
-    {ok, {Status, Headers, Body}} = httpc:request("http://www.erlang.org/doc/man/array.html"),
-    {String, Attributes, All} = mochiweb_html:parse(Body),
+    {ok, {{_Proto, 200, "OK"}, _Headers, Body}} = httpc:request("http://www.erlang.org/doc/man/array.html"),
+    {_String, _Attributes, All} = mochiweb_html:parse(Body),
     {_, Bd} = get_value(<<"body">>, All),
     {_, R2} = get_value_by_attr(<<"div">>, <<"id">>, <<"container">>, Bd),
     {_, R3} = get_value_by_attr(<<"div">>, <<"id">>, <<"leftnav">>, R2),
     {_, R4} = get_value_by_attr(<<"div">>, <<"class">>, <<"innertube">>, R3),
     {_, R5} = get_value_by_attr(<<"ul">>, <<"class">>, <<"flipMenu">>, R4),
-    [ets:insert(e1, get_section(S)) || S <- get_top(R5)],
-    ets:tab2file(e1, "e1.tab").
+    [ets:insert(Table, get_section(S)) || S <- get_top(R5)].
 
 
 get_value(Key, []) ->
