@@ -1,11 +1,11 @@
 
 REBAR = rebar
-NAME = wg_cpa
-NODE = wg_cpa_test@127.0.0.1
+NAME = erlsearch
+NODE = erlsearch_test@127.0.0.1
 REL_DIR = $(CURDIR)/rel
 REL_BUILD_DIR = $(CURDIR)/rel_build
 
-TARGET_DIR=/usr/lib/$(NAME)
+TARGET_DIR=/opt/$(NAME)
 TARGET_USER=$(NAME)
 
 all: compile
@@ -23,7 +23,7 @@ rel:
 	$(REBAR) compile generate
 
 start:
-	erl -config priv/es.config -pa deps/*/ebin ebin -s es -s reloader
+	erl -config priv/$(NAME).config -pa deps/*/ebin ebin -s $(NAME) -s reloader
 
 test: 
 	$(REBAR) compile skip_deps=true

@@ -1,0 +1,12 @@
+{application, erlsearch, [
+    {description, "Erlang search"},
+    {vsn, "0.1"},
+    {registered, []},
+    {applications, [
+        kernel,
+        stdlib,
+        lager,
+        cowboy
+    ]},
+    {mod, {erlsearch, []}}
+]}.
