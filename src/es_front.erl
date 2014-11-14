@@ -27,7 +27,7 @@ handle(Req, State) ->
 
 search(SearchReq) ->
     Out = fun(Name, Ref) ->
-        html:li(html:a(<<"http://www.erlang.org/doc/man/", Ref/binary>>, Name))
+        html:li(html:a(<<"http://www.erlang.org/doc/man/", Ref/binary>>, Name, {target, blanc}))
     end,
     R = [Out(Name, Ref) || {Name, Ref} <- es_server:search(SearchReq)],
     [cook_form(), html:hdiv(html:ul(R), {class, row})].

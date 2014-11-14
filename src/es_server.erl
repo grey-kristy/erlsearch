@@ -6,25 +6,29 @@
 
 %% API
 
--export([search/1]).
+-export([search/1, get_docs/0]).
 
 
 start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 init([]) ->
-    scan:load(),
+    es_scan:load(),
     {ok, {}}.
 
 %% API
 
 search(Request) -> gen_server:call(?MODULE, {search, Request}).
 
+get_docs() -> gen_server:call(?MODULE, {get_docs}).
+
 
 %% Server
 
 handle_call({search, Request}, _From, State) -> 
-    {reply, scan:search(Request), State}.
+    {reply, es_scan:search(Request), State};
+handle_call({get_docs}, _From, State) -> 
+    {reply, es_scan:get_docs(), State}.
 
 
 handle_info(_Msg, State) -> 
