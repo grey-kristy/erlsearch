@@ -14,18 +14,28 @@ terminate(_Reason, _Req, _State) ->
     ok.
 
 handle(Req, State) ->
-    {Req2, Post, _Get} = utils:log_request(Req),
+    {Req2, Post, Get} = utils:log_request(Req),
     {Action, Req3} = cowboy_req:binding(action, Req2),
-    [SearchReq] = utils:get_post(Post, [request]),
-    Out = case size(SearchReq) > 0 of
-        true  -> search(SearchReq);
-        false -> cook_form()
-    end,
-    ok(Req3, State, Out).
+    case Action of
+        <<"suggest">> -> js_out(Req3, State, suggest(Get));
+        _             -> ok(Req3, State, search(Post))
+    end.
 
 %% Internal functions
 
-search(SearchReq) ->
+suggest(Get) ->
+    [Query] = utils:get_get(Get, [query]),
+    R = es_server:search(Query),
+    [{query, Query}, {suggestions, {R}}].
+
+search(Post)  ->
+    [SearchReq] = utils:get_post(Post, [request]),
+    case size(SearchReq) > 0 of
+        true  -> do_search(SearchReq);
+        false -> cook_form()
+    end.
+
+do_search(SearchReq) ->
     Out = fun(Name, Ref) ->
         html:li(html:a(<<"http://www.erlang.org/doc/man/", Ref/binary>>, Name, {target, blanc}))
     end,
@@ -70,3 +80,9 @@ ok(Req, State, Body) ->
     Headers = [{<<"Content-Type">>, <<"text/html; charset=utf-8">>}],
     {ok, Req2} = cowboy_req:reply(200, Headers, [Type, cook_body(Body)], Req),
     {ok, Req2, State}.
+
+js_out(Req, State, JSON) ->
+    Body = jiffy:encode({JSON}),
+    {ok, Req2} = cowboy_req:reply(200, [{<<"Content-Type">>, <<"application/json">>}], Body, Req),
+    {ok, Req2, State}.
+

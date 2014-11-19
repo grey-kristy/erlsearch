@@ -46,8 +46,7 @@ ip_to_str(IP) ->
 get_post(Post, ArgList) ->       
     [proplists:get_value(list_to_binary(atom_to_list(Key)), Post, <<"">>) || Key <- ArgList].
 
-get_get(Req, ArgList) ->       
-    {Get, _} = cowboy_req:qs_vals(Req),
+get_get(Get, ArgList) ->       
     [proplists:get_value(list_to_binary(atom_to_list(Key)), Get, <<"">>) || Key <- ArgList].
 
 get_request(Post, Get, ArgList) ->       
