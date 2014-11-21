@@ -27,7 +27,6 @@ dispatch_rules() ->
         {'_', [
             static("js"),
             static("css"),
-            static("images"),
             {"/api/:action", es_front, []},
             {"/:action", es_front, []},
             {"/", es_front, []},

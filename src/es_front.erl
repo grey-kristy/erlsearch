@@ -25,8 +25,8 @@ handle(Req, State) ->
 
 suggest(Get) ->
     [Query] = utils:get_get(Get, [query]),
-    R = es_server:search(Query),
-    [{query, Query}, {suggestions, {R}}].
+    R = [{[{value, Name}, {data, Ref}]}  || {Name, Ref} <- es_server:search(Query)],
+    [{query, Query}, {suggestions, R}].
 
 search(Post)  ->
     [SearchReq] = utils:get_post(Post, [request]),
@@ -42,7 +42,7 @@ do_search(SearchReq) ->
     R = [Out(Name, Ref) || {Name, Ref} <- es_server:search(SearchReq)],
     [cook_form(), html:hdiv(html:ul(R), {class, row})].
 
-cook_form() ->
+cook_form0() ->
     Input = html:input([
         {type, text}, 
         {name, request}, 
@@ -61,19 +61,30 @@ cook_form() ->
     ]), {class, row}).
     
 
+cook_form() ->
+    Form = [
+        html:input([{type, text}, {name, request}, {id, "autocomplete-ajax"}, {size, 30}]),
+        html:input([{type, text}, {disabled, disabled}, {id, "autocomplete-ajax-x"}, {size, 30}])
+    ],
+    html:hdiv(html:hdiv(html:form(Form, {method, post}), {class, search}), {class, container}).
+
 cook_body(Body) ->
     Title = <<"Erlang Fast Search">>,
     Head = html:head([
         html:title(Title),
-        html:hlink([{rel, stylesheet}, {type, 'text/css'}, {href, '/css/es.css'}]),
-        html:hlink([{rel, stylesheet}, {type, 'text/css'}, {href, '/css/bootstrap.3.3.1.min.css'}])
+        html:hlink([{rel, stylesheet}, {type, 'text/css'}, {href, "/css/es.css"}]),
+        html:script("", [{type, "text/javascript"}, {src, "/js/jquery-1.8.2.min.js"}]),
+        html:script("", [{type, "text/javascript"}, {src, "/js/jquery.autocomplete.js"}])
     ]),
-    Content = [Body, <<"<hr>">>, html:footer(html:p("&copy; GreyKristy 2014"))],
+    Content = [Body, html:footer(html:p("&copy; GreyKristy 2014"))],
     HTML = html:html([
-        Head, html:body( html:hdiv(Content, {class, container})   )
+        Head, html:body( [
+%%            html:hdiv(Content, {class, container}),
+            Content,
+            html:script("", [{type, "text/javascript"}, {src, "/js/suggest.js"}])
+        ])
     ]),
-    Type = <<"<!DOCTYPE html>\n">>,
-    [Type, HTML].
+    HTML.
 
 ok(Req, State, Body) ->
     Type = <<"<!DOCTYPE html>\n">>,
