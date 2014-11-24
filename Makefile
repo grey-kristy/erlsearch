@@ -1,5 +1,3 @@
-
-REBAR = rebar
 NAME = erlsearch
 NODE = erlsearch_test@127.0.0.1
 REL_DIR = $(CURDIR)/rel
@@ -7,6 +5,8 @@ REL_BUILD_DIR = $(CURDIR)/rel_build
 
 TARGET_DIR=/opt/$(NAME)
 TARGET_USER=$(NAME)
+
+REBAR = $(shell which rebar 2>/dev/null || which ./rebar)
 
 all: compile
 
