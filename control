@@ -1,0 +1,184 @@
+#!/bin/bash
+#
+# erlsearch        Start/stop Erlang Search Server
+#
+
+### BEGIN INIT INFO
+# Provides:          erlsearch
+# Required-Start:    $network $all
+# Required-Stop:     $network $all
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Starts erlsearch server
+# Description:       Starts erlsearch server
+### END INIT INFO
+
+NAME=erlsearch
+HOST=127.0.0.1
+NODE=$NAME@$HOST
+
+NAME_TEST=${NAME}_test
+NODE_TEST=$NAME_TEST@$HOST
+NODE_TEST_INST=${NAME_TEST}_inst@$HOST
+
+SERVER_USER=$NAME
+USER=`id -nu`
+
+if [ $USER == $SERVER_USER ]
+then
+	SERVER_BASE=/opt/$NAME
+else
+	SERVER_BASE=/home/$USER/$NAME
+fi	
+
+LOG_BASE=$SERVER_BASE/log
+LOG_TEST_BASE=$SERVER_BASE/test/logs
+
+SERVER_CONF=$SERVER_BASE/priv/$NAME.config
+SERVER_DEV_CONF=$SERVER_BASE/priv/${NAME}_dev.config
+SERVER_TEST_CONF=$SERVER_BASE/priv/${NAME}_test.config
+
+SERVER_LOG=$LOG_BASE/$NAME.error.log
+SERVER_SASLLOG=$LOG_BASE/$NAME.sasl.log
+
+SERVER_TEST_LOG=$LOG_TEST_BASE/$NAME.error.log
+SERVER_TEST_SASLLOG=$LOG_TEST_BASE/$NAME.sasl.log
+
+ERL_CRASH_DUMP=$LOG_BASE/erl_crash.dump
+
+export ERL_CRASH_DUMP
+
+user_do() {
+	if [ $USER == "root" ]
+	then
+		su $SERVER_USER -c "$0 $1"
+	else
+		. /opt/erlang/r17.3/activate
+		exec $0 $1
+	fi
+}
+
+start() {
+	cd $SERVER_BASE
+	erl -name "$NODE" -pa ebin deps/*/ebin -s $NAME \
+		-sasl sasl_error_logger "{file, \"$SERVER_SASLLOG\"}" \
+		-config $SERVER_CONF \
+		-kernel error_logger "{file, \"$SERVER_LOG\"}" \
+		-noshell -detached
+}
+
+debug() {
+	cd $SERVER_BASE
+	echo $NODE
+	erl -name "$NODE" -config $SERVER_DEV_CONF -pa ebin deps/*/ebin -s $NAME -s reloader
+}
+
+test() {
+	cd $SERVER_BASE
+	erl -name "$NODE_TEST" -config $SERVER_TEST_CONF -pa ebin deps/*/ebin -s $NAME \
+		-sasl sasl_error_logger "{file, \"$SERVER_TEST_SASLLOG\"}" \
+		-kernel error_logger "{file, \"$SERVER_TEST_LOG\"}" \
+		-noshell -detached
+	erl -name "$NODE_TEST_INST" -config $SERVER_TEST_CONF -pa ebin deps/*/ebin -s ${NAME}_test test_all -s init stop
+#	erl -name "$NODE_TEST_INST" -config $SERVER_TEST_CONF -pa ebin deps/*/ebin -s ${NAME}_test test_all 	
+#	erl -name "$NODE_TEST_INST" -config $SERVER_TEST_CONF -pa ebin deps/*/ebin 	
+}
+
+stop() {
+	cd $SERVER_BASE
+	echo "rpc:call('$NODE', init, stop, [])." | erl -name "stop@$HOST" > /dev/null
+}
+
+stop_test() {
+	cd $SERVER_BASE
+	echo "rpc:call('$NODE_TEST', init, stop, [])." | erl -name "stop@$HOST" > /dev/null
+}
+
+running() {
+    epmd -names | grep "name $NAME at" > /dev/null
+}
+
+running_test() {
+    epmd -names | grep "name $NAME_TEST at" > /dev/null
+}
+
+status() {
+	if running ; then
+		echo "$NAME is running."
+	else
+      	echo "$NAME is stopped."
+      fi
+}
+
+case "$1" in
+	start)
+		user_do user_start
+	;;
+	stop)
+		user_do user_stop
+	;;
+	restart)
+		user_do user_restart
+	;;
+	attach)
+		user_do user_attach
+	;;
+	debug)
+		user_do user_debug
+	;;
+	test)
+		user_do user_test
+	;;	
+	user_start)
+		echo "Starting $NAME server: $NODE ..."
+		if running ; then
+			echo "$NAME is already running!"
+		else
+			start
+		fi
+	;;
+	user_stop)
+		echo "Stopping $NAME server: $NODE ..."
+			if running ; then
+				stop
+			else
+				echo "$NAME is already stopped!"
+			fi
+	;;
+	user_restart)
+		echo "Restarting $NAME server: $NODE ..."
+		if running ; then
+			stop
+			sleep 1
+			start
+		else
+			start
+		fi
+	;;
+	user_test)
+		if running_test ; then
+			stop_test
+		else
+			echo "Start testing..."
+			test		
+			stop_test
+		fi
+	;;
+	user_debug)
+		if running ; then	
+			echo "Stop $NAME for debugging!"
+		else
+			debug
+		fi
+	;;
+	status)
+		status
+	;;
+	user_attach)
+		erl -name "remsh$RANDOM@$HOST" -remsh "$NODE"
+	;;
+	*)
+		echo "Usage: $0 {start|stop|restart|debug|test|status|attach}"
+		exit 1
+	;;
+esac

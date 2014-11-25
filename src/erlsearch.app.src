@@ -8,5 +8,8 @@
         lager,
         cowboy
     ]},
-    {mod, {erlsearch, []}}
+    {mod, {erlsearch, []}},
+    {env, [
+        {http_port, 80}
+    ]}
 ]}.

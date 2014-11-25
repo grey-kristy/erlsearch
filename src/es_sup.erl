@@ -9,6 +9,7 @@
 
 -define(APP, erlsearch).
 -define(CHILD(I, Type), {I, {I, start_link, []}, permanent, 5000, Type, [I]}).
+-define(GET_ENV(Key), utils:get_env(?APP, Key)).
 
 %% API functions
 
@@ -18,7 +19,7 @@ start_link() ->
 %% Supervisor callbacks
 
 init([]) ->
-    {ok, { {one_for_one, 5, 10}, [ranch_spec(8060), ?CHILD(es_server, worker)]} }.
+    {ok, { {one_for_one, 5, 10}, [ranch_spec(?GET_ENV(http_port)), ?CHILD(es_server, worker)]} }.
 
 %% Internal functions
 
