@@ -44,7 +44,7 @@ do_search(SearchReq) ->
 
 cook_form() ->
     Form = [
-        html:input([{type, text}, {name, request}, {id, "autocomplete-ajax"}, {size, 30}]),
+        html:input([{type, text}, {name, request}, {id, "autocomplete-ajax"}, {placeholder, "search erlang function"}, {size, 30}]),
         html:input([{type, text}, {disabled, disabled}, {id, "autocomplete-ajax-x"}, {size, 30}])
     ],
     html:hdiv(html:hdiv(html:form(Form, {method, post}), {class, search}), {class, container}).
