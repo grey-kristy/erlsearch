@@ -63,7 +63,8 @@ cook_body(Body) ->
         Head, html:body( [
 %%            html:hdiv(Content, {class, container}),
             Content,
-            html:script("", [{type, "text/javascript"}, {src, "/js/suggest.js"}])
+            html:script("", [{type, "text/javascript"}, {src, "/js/suggest.js"}]),
+            html:script("", [{type, "text/javascript"}, {src, "/js/ga.js"}])
         ])
     ]),
     HTML.
