@@ -1,4 +1,4 @@
--module(utils).
+-module(es_utils).
 
 -export([to_int/1, to_str/1, to_bin/1]).
 -export([get_post/2, get_get/2, get_request/3]).
@@ -58,14 +58,14 @@ log_request(Req) ->
     {QS,   Req3} = cowboy_req:qs(Req2),
     {Url,  Req4} = cowboy_req:host_url(Req3),
     {Path, Req5} = cowboy_req:path(Req4),
-    case length(utils:to_str(Post)) of
+    case length(to_str(Post)) of
         0 ->
-            case length(utils:to_str(QS)) of
+            case length(to_str(QS)) of
                 0 -> ?debug(access, "~ts~ts", [to_str(Url), to_str(Path)]);
                 _ -> ?debug(access, "~ts~ts GET: ~ts", [to_str(Url), to_str(Path), to_str(QS)])
             end;
         _ ->
-            case length(utils:to_str(QS)) of
+            case length(to_str(QS)) of
                 0 -> ?debug(access, "~ts~ts POST: ~ts", [to_str(Url), to_str(Path), Body]);
                 _ -> ?debug(access, "~ts~ts GET: ~ts POST: ~ts", [to_str(Url), to_str(Path), to_str(QS), Body])
             end

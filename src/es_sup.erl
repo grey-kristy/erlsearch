@@ -9,7 +9,7 @@
 
 -define(APP, erlsearch).
 -define(CHILD(I, Type), {I, {I, start_link, []}, permanent, 5000, Type, [I]}).
--define(GET_ENV(Key), utils:get_env(?APP, Key)).
+-define(GET_ENV(Key), es_utils:get_env(?APP, Key)).
 
 %% API functions
 
@@ -31,7 +31,7 @@ dispatch_rules() ->
             {"/api/:action", es_front, []},
             {"/:action", es_front, []},
             {"/", es_front, []},
-            {'_', notfound, []}
+            {'_', es_notfound, []}
         ]}
     ]).
 

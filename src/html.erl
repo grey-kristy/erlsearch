@@ -19,6 +19,7 @@ tag(Tag, Msg, Opts) when is_atom(Msg) ->
 tag(Tag, Msg, Opts) ->
     case tag_type(Tag) of
         void -> [$<, Tag, cook_opts(Opts), "/>\n"];
+        big  -> [$<, Tag, cook_opts(Opts), ">\n", Msg, "</", Tag, ">\n"];
         _    -> [$<, Tag, cook_opts(Opts), $>, Msg, "</", Tag, ">\n"]
     end.
 
@@ -27,10 +28,14 @@ cook_opts(Opts) when is_tuple(Opts) ->
 cook_opts(Opts) ->
     [[$\s, to_bin(Key), $=, $", to_bin(Val), $"] || {Key, Val} <- Opts].
 
-tag_type(<<"link">>) -> void;
-tag_type(<<"img">>) -> void;
+tag_type(<<"link">>)  -> void;
+tag_type(<<"img">>)   -> void;
 tag_type(<<"input">>) -> void;
-tag_type(_) -> full.
+tag_type(<<"html">>)  -> big;
+tag_type(<<"head">>)  -> big;
+tag_type(<<"body">>)  -> big;
+tag_type(<<"form">>)  -> big;
+tag_type(_)           -> full.
 
 %% API
 

@@ -14,22 +14,22 @@ terminate(_Reason, _Req, _State) ->
     ok.
 
 handle(Req, State) ->
-    {Req2, Post, Get} = utils:log_request(Req),
+    {Req2, Post, Get} = es_utils:log_request(Req),
     {Action, Req3} = cowboy_req:binding(action, Req2),
     case Action of
         <<"suggest">> -> js_out(Req3, State, suggest(Get));
-        _             -> ok(Req3, State, search(Post))
+        _             -> ok(Req3, State, search(Post, Get))
     end.
 
 %% Internal functions
 
 suggest(Get) ->
-    [Query] = utils:get_get(Get, [query]),
+    [Query] = es_utils:get_get(Get, [query]),
     R = [{[{value, Name}, {data, Ref}]}  || {Name, Ref} <- es_server:search(Query)],
     [{query, Query}, {suggestions, R}].
 
-search(Post)  ->
-    [SearchReq] = utils:get_post(Post, [request]),
+search(Post, Get)  ->
+    [SearchReq] = es_utils:get_request(Post, Get, [request]),
     case size(SearchReq) > 0 of
         true  -> do_search(SearchReq);
         false -> cook_form()
@@ -41,25 +41,6 @@ do_search(SearchReq) ->
     end,
     R = [Out(Name, Ref) || {Name, Ref} <- es_server:search(SearchReq)],
     [cook_form(), html:hdiv(html:ul(R), {class, row})].
-
-cook_form0() ->
-    Input = html:input([
-        {type, text}, 
-        {name, request}, 
-        {id, request_id}, 
-        {placeholder, "search"}, 
-        {class, "form-control"}
-    ]),
-    Form = [
-        html:hdiv(Input, {class, "form-group"}),
-        html:button("Search", [{class, "btn btn-default"}, {type, submit}])
-    ],
-    html:hdiv( html:form(Form, [
-        {method, post},
-        {class, "navbar-form navbar-left"}, 
-        {role, search}
-    ]), {class, row}).
-    
 
 cook_form() ->
     Form = [

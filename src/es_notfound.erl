@@ -1,4 +1,4 @@
--module(notfound).
+-module(es_notfound).
 -behaviour(cowboy_http_handler).
 
 %% Cowboy_http_handler callbacks
