@@ -76,7 +76,8 @@ cook_body(Body) ->
         html:script("", [{type, "text/javascript"}, {src, "/js/jquery-1.8.2.min.js"}]),
         html:script("", [{type, "text/javascript"}, {src, "/js/jquery.autocomplete.js"}])
     ]),
-    Content = [Body, html:footer(html:p("&copy; GreyKristy 2014"))],
+    Footer = html:footer(html:p(["&copy; ", html:a("https://github.com/grey-kristy", "GreyKristy"), " 2014"])),
+    Content = [Body, Footer],
     HTML = html:html([
         Head, html:body( [
 %%            html:hdiv(Content, {class, container}),

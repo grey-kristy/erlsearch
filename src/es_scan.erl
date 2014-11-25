@@ -14,8 +14,12 @@ search(Word) ->
     [lists:nth(1, ets:lookup(?DOC_TABLE, Key)) || {_, Key} <- Res].
 
 load() ->
-    ets:file2tab(?DOC_FILE),
-    ets:file2tab(?INDEX_FILE).
+    case ets:file2tab(?DOC_FILE) of
+        {ok, _} ->
+            {ok, _} = ets:file2tab(?INDEX_FILE);
+        _Error ->
+            get_docs()
+    end.
 
 get_docs() ->
     create_ets(?DOC_TABLE, [ordered_set, named_table, public]),

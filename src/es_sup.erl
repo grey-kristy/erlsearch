@@ -18,7 +18,7 @@ start_link() ->
 %% Supervisor callbacks
 
 init([]) ->
-    {ok, { {one_for_one, 5, 10}, [ranch_spec(8080), ?CHILD(es_server, worker)]} }.
+    {ok, { {one_for_one, 5, 10}, [ranch_spec(8060), ?CHILD(es_server, worker)]} }.
 
 %% Internal functions
 
