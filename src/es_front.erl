@@ -47,7 +47,10 @@ cook_form() ->
         html:input([{type, text}, {name, request}, {id, "autocomplete-ajax"}, {placeholder, "search erlang function"}, {size, 30}]),
         html:input([{type, text}, {disabled, disabled}, {id, "autocomplete-ajax-x"}, {size, 30}])
     ],
-    html:hdiv(html:hdiv(html:form(Form, {method, post}), {class, search}), {class, container}).
+    [
+        html:hdiv(html:hdiv(html:form(Form, {method, post}), {class, search}), {class, container}),
+        html:hdiv("", [{id, result}, {class, container}])
+    ].
 
 cook_body(Body) ->
     Title = <<"Erlang Fast Search">>,

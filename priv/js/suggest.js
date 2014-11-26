@@ -10,14 +10,16 @@ $(function () {
             return re.test(suggestion.value);
         },
         onSelect: function(suggestion) {
-            window.open('http://www.erlang.org/doc/man/' + suggestion.data, 'erlang');
-//            $('#selction-ajax').html('You selected: ' + suggestion.value + ', ' + suggestion.data);
+            var erl_url = 'http://www.erlang.org/doc/man/';
+            $('#result').html( $("<a/>", {html: suggestion.value, href: erl_url + suggestion.data}) );
+            $('#autocomplete-ajax').val('');
+            window.open(erl_url + suggestion.data, 'erlang');
         },
         onHint: function (hint) {
             $('#autocomplete-ajax-x').val(hint);
         },
         onInvalidateSelection: function() {
-            $('#selction-ajax').html('You selected: none');
+//            $('#result').html('Nothing is found');
         }
     });
     

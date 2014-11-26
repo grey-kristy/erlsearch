@@ -14,6 +14,11 @@ a {
 	margin: 0px 40px;
 }
 
+#result {
+	padding: 5px 12px;
+	font-size: 18px;
+}
+
 div.search {
 	position: relative; height: 80px;
 }
