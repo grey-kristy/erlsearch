@@ -58,7 +58,8 @@ cook_body(Body) ->
         html:title(Title),
         html:hlink([{rel, stylesheet}, {type, 'text/css'}, {href, "/css/es.css"}]),
         html:script("", [{type, "text/javascript"}, {src, "/js/jquery-1.8.2.min.js"}]),
-        html:script("", [{type, "text/javascript"}, {src, "/js/jquery.autocomplete.js"}])
+        html:script("", [{type, "text/javascript"}, {src, "/js/jquery.autocomplete.js"}]),
+        ga()
     ]),
     Footer = html:footer(html:p(["&copy; ", html:a("https://github.com/grey-kristy", "GreyKristy"), " 2014"])),
     Content = [Body, Footer],
@@ -66,12 +67,24 @@ cook_body(Body) ->
         Head, html:body( [
 %%            html:hdiv(Content, {class, container}),
             Content,
-            html:script("", [{type, "text/javascript"}, {src, "/js/suggest.js"}]),
-            html:script("", [{type, "text/javascript"}, {src, "/js/ga.js"}])
+            html:script("", [{type, "text/javascript"}, {src, "/js/suggest.js"}])
         ])
     ]),
     HTML.
 
+ga() ->
+    Code = "
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-57094362-1', 'auto');
+  ga('send', 'pageview');
+
+",
+    html:script(Code).
+    
 ok(Req, State, Body) ->
     Type = <<"<!DOCTYPE html>\n">>,
     Headers = [{<<"Content-Type">>, <<"text/html; charset=utf-8">>}],

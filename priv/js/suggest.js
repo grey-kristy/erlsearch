@@ -5,6 +5,7 @@ $(function () {
     // Initialize ajax autocomplete:
     $('#autocomplete-ajax').autocomplete({
         serviceUrl: '/api/suggest/',
+        maxHeight: 600,
         lookupFilter: function(suggestion, originalQuery, queryLowerCase) {
             var re = new RegExp('^' + $.Autocomplete.utils.escapeRegExChars(queryLowerCase), 'i');     
             return re.test(suggestion.value);
