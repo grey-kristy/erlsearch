@@ -1,6 +1,6 @@
 -module(es_scan).
 
--export([load/0, get_docs/0, scan_docs/2, make_index/2, search/1]).
+-export([load/0, reload/0, get_docs/0, scan_docs/2, make_index/2, search/1]).
 
 -define(DOC_TABLE, doc_table).
 -define(DOC_FILE, "priv/doc_table.ets").
@@ -21,10 +21,16 @@ load() ->
             get_docs()
     end.
 
+reload() ->
+    ets:delete(?DOC_TABLE),
+    ets:delete(?INDEX_TABLE),
+    get_docs().
+
 get_docs() ->
     create_ets(?DOC_TABLE, [ordered_set, named_table, public]),
     ok = scan_docs(?DOC_TABLE, "http://www.erlang.org/doc/man/erlang.html"),
     ok = scan_docs(?DOC_TABLE, "http://www.erlang.org/doc/man/array.html"),
+    ok = scan_docs(?DOC_TABLE, "http://www.erlang.org/doc/man/application.html"),
     ok = make_index(?DOC_TABLE, ?INDEX_TABLE),
     ets:tab2file(?DOC_TABLE, ?DOC_FILE),
     ets:tab2file(?INDEX_TABLE, ?INDEX_FILE).
