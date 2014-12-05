@@ -52,13 +52,16 @@ make_index(IndexTable, DocTable, Size, Key) ->
     make_index(IndexTable, DocTable, Size, ets:next(DocTable, Key)).
 
 split_mfa(MFA) ->
-    [Module, MFun] = binary:split(MFA, <<":">>),
-    FunAr = case binary:split(MFun, <<":">>) of
-        [F]    -> F;
-        [_, F] -> F
-    end,
-    [Fun, Arity] = binary:split(FunAr, <<"/">>),
-    {Module, Fun, Arity}.
+    case binary:split(MFA, <<":">>, [global]) of
+        [Module, <<>>] -> 
+            {Module, Module, none};
+        [Module, _, FunAr] -> 
+            [Fun, Arity] = binary:split(FunAr, <<"/">>),
+            {Module, Fun, Arity};
+        [Module, FunAr] -> 
+            [Fun, Arity] = binary:split(FunAr, <<"/">>),
+            {Module, Fun, Arity}
+    end.
 
 get_part(Bin, Size) ->
     case Size >= size(Bin) of
@@ -121,13 +124,17 @@ get_section({SectionName, [_, {<<"ul">>, _, Tree}]}) ->
 parse_ref(SectionName, [{<<"a">>, [{<<"href">>, Ref}], [Name]}]) -> 
     {<<SectionName/binary, ":", Name/binary>>, Ref}.
 
+parse_top(SectionName, [{<<"a">>, [{<<"href">>, Ref}], [_]}]) -> 
+    {<<SectionName/binary, ":">>, Ref}.
+
 get_section(Name, Acc, []) -> 
     lager:info("~p functions in ~p section loaded OK", [length(Acc), Name]),
     lists:reverse(Acc);
 get_section(Name, Acc, [{<<"li">>, Attr, Inner} | Rest]) ->
     case proplists:is_defined(<<"title">>, Attr) of
         true  -> get_section(Name, [parse_ref(Name, Inner) | Acc], Rest);
-        false -> get_section(Name, Acc, Rest)
+        false -> get_section(Name, [parse_top(Name, Inner) | Acc], Rest)
+%        false -> get_section(Name, Acc, Rest)
     end;
 get_section(Name, Acc, [_Curr | Rest]) ->
     get_section(Name, Acc, Rest).
