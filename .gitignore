@@ -1,4 +1,6 @@
 
+.erlang.cookie
+
 erl_crash.dump
 *.beam
 

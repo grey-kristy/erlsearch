@@ -17,6 +17,8 @@ NAME=erlsearch
 HOST=127.0.0.1
 NODE=$NAME@$HOST
 
+SET_ERL=/opt/erlang/r17.3/activate
+
 NAME_TEST=${NAME}_test
 NODE_TEST=$NAME_TEST@$HOST
 NODE_TEST_INST=${NAME_TEST}_inst@$HOST
@@ -53,13 +55,12 @@ user_do() {
 	then
 		su $SERVER_USER -c "$0 $1"
 	else
-		. /opt/erlang/r17.3/activate
 		exec $0 $1
 	fi
 }
 
 start() {
-	cd $SERVER_BASE
+	. $SET_ERL
 	erl -name "$NODE" -pa ebin deps/*/ebin -s $NAME \
 		-sasl sasl_error_logger "{file, \"$SERVER_SASLLOG\"}" \
 		-config $SERVER_CONF \
@@ -68,12 +69,14 @@ start() {
 }
 
 debug() {
+	. $SET_ERL
 	cd $SERVER_BASE
 	echo $NODE
 	erl -name "$NODE" -config $SERVER_DEV_CONF -pa ebin deps/*/ebin -s $NAME -s reloader
 }
 
 test() {
+	. $SET_ERL
 	cd $SERVER_BASE
 	erl -name "$NODE_TEST" -config $SERVER_TEST_CONF -pa ebin deps/*/ebin -s $NAME \
 		-sasl sasl_error_logger "{file, \"$SERVER_TEST_SASLLOG\"}" \
@@ -85,21 +88,25 @@ test() {
 }
 
 stop() {
+	. $SET_ERL
 	cd $SERVER_BASE
 	echo "rpc:call('$NODE', init, stop, [])." | erl -name "stop@$HOST" > /dev/null
 }
 
 stop_test() {
+	. $SET_ERL
 	cd $SERVER_BASE
 	echo "rpc:call('$NODE_TEST', init, stop, [])." | erl -name "stop@$HOST" > /dev/null
 }
 
 running() {
-    epmd -names | grep "name $NAME at" > /dev/null
+	. $SET_ERL
+	epmd -names | grep "name $NAME at" > /dev/null
 }
 
 running_test() {
-    epmd -names | grep "name $NAME_TEST at" > /dev/null
+	. $SET_ERL
+	epmd -names | grep "name $NAME_TEST at" > /dev/null
 }
 
 status() {
@@ -175,6 +182,7 @@ case "$1" in
 		status
 	;;
 	user_attach)
+		. $SET_ERL
 		erl -name "remsh$RANDOM@$HOST" -remsh "$NODE"
 	;;
 	*)

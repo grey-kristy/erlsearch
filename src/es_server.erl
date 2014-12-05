@@ -20,7 +20,7 @@ init([]) ->
 
 search(Request) -> gen_server:call(?MODULE, {search, Request}).
 
-reload() -> gen_server:call(?MODULE, {reload}).
+reload() -> gen_server:call(?MODULE, {reload}, 30000).
 
 
 %% Server
