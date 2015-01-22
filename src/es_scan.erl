@@ -31,6 +31,7 @@ get_docs() ->
     ok = scan_docs(?DOC_TABLE, "http://www.erlang.org/doc/man/erlang.html"),
     ok = scan_docs(?DOC_TABLE, "http://www.erlang.org/doc/man/array.html"),
     ok = scan_docs(?DOC_TABLE, "http://www.erlang.org/doc/man/application.html"),
+    ok = scan_docs(?DOC_TABLE, "http://www.erlang.org/doc/man/crypto.html"),
     ok = make_index(?DOC_TABLE, ?INDEX_TABLE),
     ets:tab2file(?DOC_TABLE, ?DOC_FILE),
     ets:tab2file(?INDEX_TABLE, ?INDEX_FILE).
