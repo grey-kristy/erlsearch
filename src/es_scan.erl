@@ -1,46 +1,46 @@
 -module(es_scan).
 
--export([load/0, reload/0, get_docs/0, scan_docs/2, make_index/2, search/1]).
+-export([load/1, reload/2, get_docs/1, scan_docs/2, make_index/2, search/2]).
 
--define(DOC_TABLE, doc_table).
 -define(DOC_FILE, "priv/doc_table.ets").
-
--define(INDEX_TABLE, index_table).
 -define(INDEX_FILE, "priv/index_table.ets").
 
 
-search(Word) ->
-    Res = ets:lookup(?INDEX_TABLE, Word),
-    [lists:nth(1, ets:lookup(?DOC_TABLE, Key)) || {_, Key} <- Res].
+search({DocTbl, IndexTbl}, Word) ->
+    Res = ets:lookup(IndexTbl, Word),
+    [lists:nth(1, ets:lookup(DocTbl, Key)) || {_, Key} <- Res].
 
-load() ->
+load(Heir) ->
     case ets:file2tab(?DOC_FILE) of
-        {ok, _} ->
-            {ok, _} = ets:file2tab(?INDEX_FILE);
+        {ok, DocTbl} ->
+            {ok, IndexTbl} = ets:file2tab(?INDEX_FILE),
+            {DocTbl, IndexTbl};
         _Error ->
-            get_docs()
+            get_docs(Heir)
     end.
 
-reload() ->
-    ets:delete(?DOC_TABLE),
-    ets:delete(?INDEX_TABLE),
-    get_docs().
+reload({OldDocTbl, OldIndexTbl}, Heir) ->
+    {DocTbl, IndexTbl} = get_docs(Heir),
+    true = ets:delete(OldDocTbl),
+    true = ets:delete(OldIndexTbl),
+    {DocTbl, IndexTbl}.
 
-get_docs() ->
-    create_ets(?DOC_TABLE, [ordered_set, named_table, public]),
-    ok = scan_docs(?DOC_TABLE, "http://www.erlang.org/doc/man/erlang.html"),
-    ok = scan_docs(?DOC_TABLE, "http://www.erlang.org/doc/man/array.html"),
-    ok = scan_docs(?DOC_TABLE, "http://www.erlang.org/doc/man/application.html"),
-    ok = scan_docs(?DOC_TABLE, "http://www.erlang.org/doc/man/crypto.html"),
-    ok = make_index(?DOC_TABLE, ?INDEX_TABLE),
-    ets:tab2file(?DOC_TABLE, ?DOC_FILE),
-    ets:tab2file(?INDEX_TABLE, ?INDEX_FILE).
+get_docs(Heir) ->
+    DocTbl = create_ets(noname, [ordered_set, public, {heir, Heir, doc_table}]),
+    ok = scan_docs(DocTbl, "http://www.erlang.org/doc/man/erlang.html"),
+    ok = scan_docs(DocTbl, "http://www.erlang.org/doc/man/array.html"),
+    ok = scan_docs(DocTbl, "http://www.erlang.org/doc/man/application.html"),
+    ok = scan_docs(DocTbl, "http://www.erlang.org/doc/man/crypto.html"),
+    IndexTbl = make_index(DocTbl, Heir),
+    ok = ets:tab2file(DocTbl, ?DOC_FILE),
+    ok = ets:tab2file(IndexTbl, ?INDEX_FILE),
+    {DocTbl, IndexTbl}.
 
-make_index(DocTable, IndexTable) ->
-    create_ets(IndexTable, [bag, named_table, public]),
+make_index(DocTable, Heir) ->
+    IndexTable = create_ets(noname, [bag, public, {heir, Heir, index_table}]),
     [make_index(IndexTable, DocTable, N, ets:first(DocTable)) || N <- lists:seq(1,10)],
     lager:info("~p indexes created OK", [ets:info(IndexTable, size)]),
-    ok.
+    IndexTable.
 
 make_index(IndexTable, _DocTable, Size, '$end_of_table') ->    
     lager:info("~p (~p) indexes created OK", [Size, ets:info(IndexTable, size)]),
@@ -83,7 +83,6 @@ scan_docs(Table, Url) ->
     [ets:insert(Table, get_section(S)) || S <- get_top(R5), section_is_valid(S)],
     lager:info("~p functions loaded OK", [ets:info(Table, size)]),
     ok.
-
 
 get_node(_Tag, []) -> undefined;
 get_node(Tag, [{Tag, Attr, Inner} | _Rest]) -> {Attr, Inner};
@@ -135,7 +134,6 @@ get_section(Name, Acc, [{<<"li">>, Attr, Inner} | Rest]) ->
     case proplists:is_defined(<<"title">>, Attr) of
         true  -> get_section(Name, [parse_ref(Name, Inner) | Acc], Rest);
         false -> get_section(Name, [parse_top(Name, Inner) | Acc], Rest)
-%        false -> get_section(Name, Acc, Rest)
     end;
 get_section(Name, Acc, [_Curr | Rest]) ->
     get_section(Name, Acc, Rest).

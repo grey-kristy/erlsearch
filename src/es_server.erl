@@ -13,8 +13,7 @@ start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 init([]) ->
-    es_scan:load(),
-    {ok, {}}.
+    {ok, es_scan:load(self())}.
 
 %% API
 
@@ -26,12 +25,18 @@ reload() -> gen_server:call(?MODULE, {reload}, 30000).
 %% Server
 
 handle_call({search, Request}, _From, State) -> 
-    {reply, es_scan:search(Request), State};
+    {reply, es_scan:search(State, Request), State};
 handle_call({reload}, _From, State) -> 
-    {reply, es_scan:reload(), State}.
+    spawn(es_scan, reload, [State, self()]),
+    {reply, ok, State}.
 
 
-handle_info(_Msg, State) -> 
+handle_info({'ETS-TRANSFER', DocTable, _From, doc_table}, {_, IndexTable}) -> 
+    {noreply, {DocTable, IndexTable}};
+handle_info({'ETS-TRANSFER', IndexTable, _From, index_table}, {DocTable, _}) -> 
+    {noreply, {DocTable, IndexTable}};
+handle_info(Msg, State) -> 
+    lager:warn("es_server is recived unexpected message: ~p", [Msg]),
     {noreply, State}.
 
 
