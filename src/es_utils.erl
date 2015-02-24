@@ -54,7 +54,7 @@ get_request(Post, Get, ArgList) ->
 
 log_request(Req) ->
     {ok, Body, Req2} = cowboy_req:body(Req),
-    Post = cowboy_http:x_www_form_urlencoded(Body),
+    Post = cow_qs:parse_qs(Body),
     {QS,   Req3} = cowboy_req:qs(Req2),
     {Url,  Req4} = cowboy_req:host_url(Req3),
     {Path, Req5} = cowboy_req:path(Req4),
@@ -70,7 +70,7 @@ log_request(Req) ->
                 _ -> ?debug(access, "~ts~ts GET: ~ts POST: ~ts", [to_str(Url), to_str(Path), to_str(QS), Body])
             end
     end,
-    {Req5, Post, cowboy_http:x_www_form_urlencoded(QS)}.
+    {Req5, Post, cow_qs:parse_qs(QS)}.
 
 %%
 %% Application utils

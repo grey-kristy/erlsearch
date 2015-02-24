@@ -24,10 +24,12 @@ init([]) ->
 %% Internal functions
 
 dispatch_rules() ->
+    set_priv_path(?APP),
     cowboy_router:compile([
         {'_', [
             static("js"),
             static("css"),
+            {"/favicon.ico", cowboy_static, {priv_file, ?APP, "favicon.ico"}},
             {"/api/:action", es_front, []},
             {"/:action", es_front, []},
             {"/", es_front, []},
@@ -38,9 +40,11 @@ dispatch_rules() ->
 ranch_spec(Port) ->
     ranch:child_spec(http, 20, ranch_tcp, [{port, Port}], cowboy_protocol, [{env, [{dispatch, dispatch_rules()}]}]).
 
+set_priv_path(AppName) ->
+    AppDir = filename:dirname(code:which(AppName)),
+    code:add_path(AppDir).
+
 static(Filetype) ->
-    {lists:append(["/", Filetype, "/[...]"]), cowboy_static, [
-        {directory, {priv_dir, ?APP, [list_to_binary(Filetype)]}},
-        {mimetypes, {fun mimetypes:path_to_mimes/2, default}}
-    ]}.
+    {"/" ++ Filetype ++ "/[...]", cowboy_static, {priv_dir, ?APP, Filetype}}.
+
 

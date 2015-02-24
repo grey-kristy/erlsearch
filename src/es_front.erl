@@ -15,18 +15,18 @@ terminate(_Reason, _Req, _State) ->
 
 handle(Req, State) ->
     {Req2, Post, Get} = es_utils:log_request(Req),
-    {Action, Req3} = cowboy_req:binding(action, Req2),
+    {Action, ReqN} = cowboy_req:binding(action, Req2),
     case Action of
-        <<"suggest">> -> js_out(Req3, State, suggest(Get));
-        _             -> ok(Req3, State, search(Post, Get))
+        <<"suggest">> -> js_out(ReqN, State, suggest(Get));
+        _             -> ok(ReqN, State, search(Post, Get))
     end.
 
 %% Internal functions
 
 suggest(Get) ->
-    [Query] = es_utils:get_get(Get, [query]),
+    [Query] = es_utils:get_get(Get, ['query']),
     R = [{[{value, Name}, {data, Ref}]}  || {Name, Ref} <- es_server:search(Query)],
-    [{query, Query}, {suggestions, R}].
+    [{'query', Query}, {suggestions, R}].
 
 search(Post, Get)  ->
     [SearchReq] = es_utils:get_request(Post, Get, [request]),
