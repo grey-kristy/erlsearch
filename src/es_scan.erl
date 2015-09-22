@@ -31,6 +31,7 @@ get_docs(Heir) ->
     ok = scan_docs(DocTbl, "http://www.erlang.org/doc/man/array.html"),
     ok = scan_docs(DocTbl, "http://www.erlang.org/doc/man/application.html"),
     ok = scan_docs(DocTbl, "http://www.erlang.org/doc/man/crypto.html"),
+    ok = scan_docs(DocTbl, "http://www.erlang.org/doc/man/dbg.html"),
     ok = scan_docs(DocTbl, "http://erlang.org/doc/man/inets.html"),
     IndexTbl = make_index(DocTbl, Heir),
     ok = ets:tab2file(DocTbl, ?DOC_FILE),
